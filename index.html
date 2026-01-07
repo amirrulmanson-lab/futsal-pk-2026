@@ -396,15 +396,22 @@
         }
 
         async function initDefaultData(category, docRef) {
+            // Determine number of teams based on category
+            // Rendah: A=5, B=5
+            // Menengah: A=4, B=5
+            const teamsA_Count = category === 'menengah' ? 4 : 5;
+            const teamsB_Count = 5;
+
+            // Generate team names dynamically
+            const teamsA = Array.from({length: teamsA_Count}, (_, i) => 
+                `Pasukan ${category === 'rendah' ? 'R' : 'M'}-A${i+1}`
+            );
+            const teamsB = Array.from({length: teamsB_Count}, (_, i) => 
+                `Pasukan ${category === 'rendah' ? 'R' : 'M'}-B${i+1}`
+            );
+
             const defaultData = {
-                teamNames: {
-                    A: category === 'rendah' 
-                        ? ["Pasukan R-A1", "Pasukan R-A2", "Pasukan R-A3", "Pasukan R-A4", "Pasukan R-A5"]
-                        : ["Pasukan M-A1", "Pasukan M-A2", "Pasukan M-A3", "Pasukan M-A4", "Pasukan M-A5"],
-                    B: category === 'rendah'
-                        ? ["Pasukan R-B1", "Pasukan R-B2", "Pasukan R-B3", "Pasukan R-B4", "Pasukan R-B5"]
-                        : ["Pasukan M-B1", "Pasukan M-B2", "Pasukan M-B3", "Pasukan M-B4", "Pasukan M-B5"]
-                },
+                teamNames: { A: teamsA, B: teamsB },
                 matches: [],
                 knockout: {
                     semi1: { homeScore: null, awayScore: null },
@@ -413,9 +420,11 @@
                 }
             };
 
+            // Generate matches dynamically based on team count
             ['A', 'B'].forEach(group => {
-                for (let i = 0; i < 5; i++) {
-                    for (let j = i + 1; j < 5; j++) {
+                const teamCount = defaultData.teamNames[group].length;
+                for (let i = 0; i < teamCount; i++) {
+                    for (let j = i + 1; j < teamCount; j++) {
                         defaultData.matches.push({
                             id: `${category}-${group}-${i}-${j}`,
                             group: group,
@@ -631,15 +640,20 @@
             loader.innerText = 'Sedang Reset Data...';
             document.body.appendChild(loader);
 
+            // Determine number of teams based on currentCategory
+            const teamsA_Count = currentCategory === 'menengah' ? 4 : 5;
+            const teamsB_Count = 5;
+
+            // Generate team names dynamically
+            const teamsA = Array.from({length: teamsA_Count}, (_, i) => 
+                `Pasukan ${currentCategory === 'rendah' ? 'R' : 'M'}-A${i+1}`
+            );
+            const teamsB = Array.from({length: teamsB_Count}, (_, i) => 
+                `Pasukan ${currentCategory === 'rendah' ? 'R' : 'M'}-B${i+1}`
+            );
+
             const defaultData = {
-                teamNames: {
-                    A: currentCategory === 'rendah' 
-                        ? ["Pasukan R-A1", "Pasukan R-A2", "Pasukan R-A3", "Pasukan R-A4", "Pasukan R-A5"]
-                        : ["Pasukan M-A1", "Pasukan M-A2", "Pasukan M-A3", "Pasukan M-A4", "Pasukan M-A5"],
-                    B: currentCategory === 'rendah'
-                        ? ["Pasukan R-B1", "Pasukan R-B2", "Pasukan R-B3", "Pasukan R-B4", "Pasukan R-B5"]
-                        : ["Pasukan M-B1", "Pasukan M-B2", "Pasukan M-B3", "Pasukan M-B4", "Pasukan M-B5"]
-                },
+                teamNames: { A: teamsA, B: teamsB },
                 matches: [],
                 knockout: {
                     semi1: { homeScore: null, awayScore: null },
@@ -648,9 +662,11 @@
                 }
             };
 
+            // Generate matches dynamically based on team count
             ['A', 'B'].forEach(group => {
-                for (let i = 0; i < 5; i++) {
-                    for (let j = i + 1; j < 5; j++) {
+                const teamCount = defaultData.teamNames[group].length;
+                for (let i = 0; i < teamCount; i++) {
+                    for (let j = i + 1; j < teamCount; j++) {
                         defaultData.matches.push({
                             id: `${currentCategory}-${group}-${i}-${j}`,
                             group: group,
