@@ -32,6 +32,12 @@
             font-weight: 800;
         }
 
+        .cat-active {
+            background-color: #38bdf8 !important;
+            color: #0f172a !important;
+            border-color: #38bdf8 !important;
+        }
+
         .gradient-text {
             background: linear-gradient(90deg, #38bdf8, #818cf8);
             -webkit-background-clip: text;
@@ -80,6 +86,12 @@
                 <p id="adminStatus" class="text-xs text-slate-400 hidden italic">Mod Pentadbir Aktif - Boleh Edit Nama & Skor</p>
             </div>
         </header>
+
+        <!-- Category Selection -->
+        <div class="flex justify-center md:justify-start gap-4 mb-8">
+            <button onclick="switchCategory('rendah')" id="btn-rendah" class="cat-active px-6 py-2 rounded-xl border border-slate-700 font-bold transition-all uppercase tracking-widest text-sm">Rendah</button>
+            <button onclick="switchCategory('menengah')" id="btn-menengah" class="px-6 py-2 rounded-xl border border-slate-700 font-bold transition-all uppercase tracking-widest text-sm hover:border-slate-500">Menengah</button>
+        </div>
 
         <!-- Navigation -->
         <nav class="flex space-x-8 mb-8 border-b border-slate-800">
@@ -178,40 +190,54 @@
     </div>
 
     <script>
-        // Initial Default Teams
-        let teamNames = JSON.parse(localStorage.getItem('futsal_team_names_2026')) || {
-            A: ["Pasukan A1", "Pasukan A2", "Pasukan A3", "Pasukan A4", "Pasukan A5"],
-            B: ["Pasukan B1", "Pasukan B2", "Pasukan B3", "Pasukan B4", "Pasukan B5"]
+        // State Management
+        let currentCategory = 'rendah';
+        let isAdmin = false;
+
+        // Data Storage Structure
+        let db = JSON.parse(localStorage.getItem('futsal_db_2026')) || {
+            rendah: {
+                teamNames: {
+                    A: ["Pasukan R-A1", "Pasukan R-A2", "Pasukan R-A3", "Pasukan R-A4", "Pasukan R-A5"],
+                    B: ["Pasukan R-B1", "Pasukan R-B2", "Pasukan R-B3", "Pasukan R-B4", "Pasukan R-B5"]
+                },
+                matches: []
+            },
+            menengah: {
+                teamNames: {
+                    A: ["Pasukan M-A1", "Pasukan M-A2", "Pasukan M-A3", "Pasukan M-A4", "Pasukan M-A5"],
+                    B: ["Pasukan M-B1", "Pasukan M-B2", "Pasukan M-B3", "Pasukan M-B4", "Pasukan M-B5"]
+                },
+                matches: []
+            }
         };
 
-        let isAdmin = false;
-        let matches = JSON.parse(localStorage.getItem('futsal_matches_2026_v2')) || [];
-
-        // Initialize Matches
-        function initMatches() {
-            if (matches.length === 0) {
-                ['A', 'B'].forEach(group => {
-                    for (let i = 0; i < 5; i++) {
-                        for (let j = i + 1; j < 5; j++) {
-                            matches.push({
-                                id: `${group}-${i}-${j}`,
-                                group: group,
-                                homeIdx: i,
-                                awayIdx: j,
-                                homeScore: null,
-                                awayScore: null,
-                                completed: false
-                            });
+        // Initialize Matches for both categories if empty
+        function initDB() {
+            ['rendah', 'menengah'].forEach(cat => {
+                if (db[cat].matches.length === 0) {
+                    ['A', 'B'].forEach(group => {
+                        for (let i = 0; i < 5; i++) {
+                            for (let j = i + 1; j < 5; j++) {
+                                db[cat].matches.push({
+                                    id: `${cat}-${group}-${i}-${j}`,
+                                    group: group,
+                                    homeIdx: i,
+                                    awayIdx: j,
+                                    homeScore: null,
+                                    awayScore: null,
+                                    completed: false
+                                });
+                            }
                         }
-                    }
-                });
-                saveData();
-            }
+                    });
+                }
+            });
+            saveData();
         }
 
         function saveData() {
-            localStorage.setItem('futsal_matches_2026_v2', JSON.stringify(matches));
-            localStorage.setItem('futsal_team_names_2026', JSON.stringify(teamNames));
+            localStorage.setItem('futsal_db_2026', JSON.stringify(db));
             renderAll();
         }
 
@@ -223,11 +249,12 @@
 
         function renderMatches(group) {
             const container = document.getElementById(`matches-${group}`);
-            const groupMatches = matches.filter(m => m.group === group);
+            const groupMatches = db[currentCategory].matches.filter(m => m.group === group);
+            const teamList = db[currentCategory].teamNames[group];
             
             container.innerHTML = groupMatches.map(m => {
-                const homeName = teamNames[group][m.homeIdx];
-                const awayName = teamNames[group][m.awayIdx];
+                const homeName = teamList[m.homeIdx];
+                const awayName = teamList[m.awayIdx];
 
                 return `
                 <div class="sport-card p-5 rounded-2xl flex items-center justify-between gap-4">
@@ -262,13 +289,13 @@
 
         function updateTeamName(group, idx, newName) {
             if (!newName.trim()) return;
-            teamNames[group][idx] = newName.trim();
+            db[currentCategory].teamNames[group][idx] = newName.trim();
             saveData();
             showToast("Nama Pasukan Dikemaskini");
         }
 
         function updateScore(id, side, value) {
-            const match = matches.find(m => m.id === id);
+            const match = db[currentCategory].matches.find(m => m.id === id);
             const score = value === '' ? null : parseInt(value);
             
             if (side === 'home') match.homeScore = score;
@@ -282,11 +309,11 @@
         function renderTables() {
             ['A', 'B'].forEach(group => {
                 const tableBody = document.getElementById(`table-${group}`);
-                const stats = teamNames[group].map((name, idx) => ({
+                const stats = db[currentCategory].teamNames[group].map((name, idx) => ({
                     idx, name, played: 0, win: 0, draw: 0, loss: 0, points: 0
                 }));
 
-                matches.filter(m => m.group === group && m.completed).forEach(m => {
+                db[currentCategory].matches.filter(m => m.group === group && m.completed).forEach(m => {
                     const home = stats.find(s => s.idx === m.homeIdx);
                     const away = stats.find(s => s.idx === m.awayIdx);
 
@@ -312,6 +339,13 @@
                     </tr>
                 `).join('');
             });
+        }
+
+        function switchCategory(cat) {
+            currentCategory = cat;
+            document.getElementById('btn-rendah').classList.toggle('cat-active', cat === 'rendah');
+            document.getElementById('btn-menengah').classList.toggle('cat-active', cat === 'menengah');
+            renderAll();
         }
 
         function switchTab(tab) {
@@ -374,7 +408,7 @@
         }
 
         window.onload = () => {
-            initMatches();
+            initDB();
             renderAll();
         };
     </script>
