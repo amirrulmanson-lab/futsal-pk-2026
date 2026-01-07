@@ -152,12 +152,21 @@
                 </h1>
             </div>
             <div class="flex flex-col items-center md:items-end gap-2">
-                <button id="adminBtn" onclick="toggleAdminMode()" class="btn-admin font-black px-8 py-3 rounded-full transition-all flex items-center gap-2 shadow-lg active:scale-95">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                    </svg>
-                    <span>ADMIN PORTAL</span>
-                </button>
+                <div class="flex gap-2">
+                    <!-- Reset Button: Hidden by default -->
+                    <button id="resetBtn" onclick="resetSystem()" class="hidden bg-red-800 text-white font-bold px-4 py-3 rounded-full shadow-lg hover:bg-red-700 transition-all text-xs uppercase tracking-widest flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Reset Sistem
+                    </button>
+                    <button id="adminBtn" onclick="toggleAdminMode()" class="btn-admin font-black px-8 py-3 rounded-full transition-all flex items-center gap-2 shadow-lg active:scale-95">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                        </svg>
+                        <span>ADMIN PORTAL</span>
+                    </button>
+                </div>
                 <p id="adminStatus" class="text-xs text-amber-600 hidden italic font-bold uppercase tracking-widest">Akses Editor Aktif</p>
             </div>
         </header>
@@ -608,6 +617,67 @@
             window.saveData();
             showToast("Skor Kalah Mati Disimpan");
         };
+        
+        // --- RESET LOGIC ---
+
+        window.resetSystem = async function() {
+            if (!isAdmin) return;
+            if (!confirm("ADAKAH ANDA PASTI? Tindakan ini akan memadamkan SEMUA data skor dan nama pasukan untuk kategori ini. Tindakan ini tidak boleh dikembalikan.")) return;
+            
+            // Show loading overlay manually
+            const loader = document.createElement('div');
+            loader.id = 'reset-overlay';
+            loader.className = 'fixed inset-0 bg-black/80 z-[70] flex items-center justify-center text-white font-bold';
+            loader.innerText = 'Sedang Reset Data...';
+            document.body.appendChild(loader);
+
+            const defaultData = {
+                teamNames: {
+                    A: currentCategory === 'rendah' 
+                        ? ["Pasukan R-A1", "Pasukan R-A2", "Pasukan R-A3", "Pasukan R-A4", "Pasukan R-A5"]
+                        : ["Pasukan M-A1", "Pasukan M-A2", "Pasukan M-A3", "Pasukan M-A4", "Pasukan M-A5"],
+                    B: currentCategory === 'rendah'
+                        ? ["Pasukan R-B1", "Pasukan R-B2", "Pasukan R-B3", "Pasukan R-B4", "Pasukan R-B5"]
+                        : ["Pasukan M-B1", "Pasukan M-B2", "Pasukan M-B3", "Pasukan M-B4", "Pasukan M-B5"]
+                },
+                matches: [],
+                knockout: {
+                    semi1: { homeScore: null, awayScore: null },
+                    semi2: { homeScore: null, awayScore: null },
+                    final: { homeScore: null, awayScore: null }
+                }
+            };
+
+            ['A', 'B'].forEach(group => {
+                for (let i = 0; i < 5; i++) {
+                    for (let j = i + 1; j < 5; j++) {
+                        defaultData.matches.push({
+                            id: `${currentCategory}-${group}-${i}-${j}`,
+                            group: group,
+                            homeIdx: i,
+                            awayIdx: j,
+                            homeScore: null,
+                            awayScore: null,
+                            completed: false
+                        });
+                    }
+                }
+            });
+
+            try {
+                const docRef = doc(dbFirestore, 'artifacts', appId, 'public', 'data', 'tournament_data', currentCategory);
+                await setDoc(docRef, defaultData);
+                // db local update will happen via onSnapshot, but we can optimistically set it to prevent flicker
+                db[currentCategory] = defaultData;
+                renderAll();
+                showToast("Sistem Telah Direset");
+            } catch (e) {
+                console.error(e);
+                alert("Ralat semasa reset.");
+            } finally {
+                document.getElementById('reset-overlay').remove();
+            }
+        };
 
         // --- UI UTILS ---
 
@@ -641,6 +711,7 @@
 
         window.updateAdminUI = function(active) {
             const btn = document.getElementById('adminBtn');
+            const resetBtn = document.getElementById('resetBtn'); // Get the reset button
             const status = document.getElementById('adminStatus');
             if (active) {
                 btn.innerText = 'LOG KELUAR';
@@ -648,12 +719,14 @@
                 btn.style.borderColor = '#ef4444';
                 btn.style.color = '#fff';
                 status.classList.remove('hidden');
+                resetBtn.classList.remove('hidden'); // Show reset button
             } else {
                 btn.innerText = 'ADMIN PORTAL';
                 btn.style.background = '#000';
                 btn.style.borderColor = '#000';
                 btn.style.color = '#fbbf24';
                 status.classList.add('hidden');
+                resetBtn.classList.add('hidden'); // Hide reset button
             }
         };
 
