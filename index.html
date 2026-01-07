@@ -116,10 +116,23 @@
         th {
             background-color: #f8fafc;
         }
+        
+        /* Loading overlay */
+        #loading-overlay {
+            display: flex;
+        }
     </style>
 </head>
 <body class="min-h-screen pb-12">
     <div class="brush-overlay"></div>
+
+    <!-- Loading Indicator -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-[60] flex items-center justify-center transition-opacity duration-300">
+        <div class="text-center">
+            <div class="w-16 h-16 border-4 border-amber-400 border-t-black rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="font-bold text-slate-600 animate-pulse">Menghubungkan ke Pangkalan Data...</p>
+        </div>
+    </div>
 
     <div id="app" class="max-w-5xl mx-auto p-4 md:p-8">
         <!-- Header Section -->
@@ -243,65 +256,156 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCTg7rxsQWnZtYkjySFkOkqE6Ep0pEtIVE",
+            authDomain: "futsal-pend-khas-melaka.firebaseapp.com",
+            projectId: "futsal-pend-khas-melaka",
+            storageBucket: "futsal-pend-khas-melaka.firebasestorage.app",
+            messagingSenderId: "718498259934",
+            appId: "1:718498259934:web:f992d965a1410b1192b34f",
+            measurementId: "G-1SKFYKN0WG"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const dbFirestore = getFirestore(app);
+        
+        // Use Global App ID for proper Firestore pathing
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'futsal-pend-khas-melaka-default';
+
+        // Global State
         let currentCategory = 'rendah';
         let isAdmin = false;
+        
+        // Local state mirror for rendering
+        let db = {
+            rendah: null,
+            menengah: null
+        };
 
-        let db = JSON.parse(localStorage.getItem('futsal_db_2026')) || {
-            rendah: {
-                teamNames: {
-                    A: ["Pasukan R-A1", "Pasukan R-A2", "Pasukan R-A3", "Pasukan R-A4", "Pasukan R-A5"],
-                    B: ["Pasukan R-B1", "Pasukan R-B2", "Pasukan R-B3", "Pasukan R-B4", "Pasukan R-B5"]
-                },
-                matches: []
-            },
-            menengah: {
-                teamNames: {
-                    A: ["Pasukan M-A1", "Pasukan M-A2", "Pasukan M-A3", "Pasukan M-A4", "Pasukan M-A5"],
-                    B: ["Pasukan M-B1", "Pasukan M-B2", "Pasukan M-B3", "Pasukan M-B4", "Pasukan M-B5"]
-                },
-                matches: []
+        // Initial Authentication & Data Loading
+        const initAuth = async () => {
+            try {
+                await signInAnonymously(auth);
+                console.log("Authenticated anonymously");
+                initDataListeners();
+            } catch (error) {
+                console.error("Auth Error:", error);
+                alert("Ralat sambungan ke pangkalan data.");
             }
         };
 
-        function initDB() {
-            ['rendah', 'menengah'].forEach(cat => {
-                if (db[cat].matches.length === 0) {
-                    ['A', 'B'].forEach(group => {
-                        for (let i = 0; i < 5; i++) {
-                            for (let j = i + 1; j < 5; j++) {
-                                db[cat].matches.push({
-                                    id: `${cat}-${group}-${i}-${j}`,
-                                    group: group,
-                                    homeIdx: i,
-                                    awayIdx: j,
-                                    homeScore: null,
-                                    awayScore: null,
-                                    completed: false
-                                });
-                            }
-                        }
-                    });
+        initAuth();
+
+        function initDataListeners() {
+            // Listen to 'rendah' document
+            const rendahDoc = doc(dbFirestore, 'artifacts', appId, 'public', 'data', 'tournament_data', 'rendah');
+            onSnapshot(rendahDoc, (docSnap) => {
+                if (docSnap.exists()) {
+                    db.rendah = docSnap.data();
+                    if (currentCategory === 'rendah') renderAll();
+                    checkLoading();
+                } else {
+                    initDefaultData('rendah', rendahDoc);
+                }
+            }, (error) => console.error("Snapshot error:", error));
+
+            // Listen to 'menengah' document
+            const menengahDoc = doc(dbFirestore, 'artifacts', appId, 'public', 'data', 'tournament_data', 'menengah');
+            onSnapshot(menengahDoc, (docSnap) => {
+                if (docSnap.exists()) {
+                    db.menengah = docSnap.data();
+                    if (currentCategory === 'menengah') renderAll();
+                    checkLoading();
+                } else {
+                    initDefaultData('menengah', menengahDoc);
+                }
+            }, (error) => console.error("Snapshot error:", error));
+        }
+
+        function checkLoading() {
+            if (db.rendah && db.menengah) {
+                const loader = document.getElementById('loading-overlay');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 300);
+                }
+            }
+        }
+
+        async function initDefaultData(category, docRef) {
+            console.log(`Initializing default data for ${category}...`);
+            const defaultData = {
+                teamNames: {
+                    A: category === 'rendah' 
+                        ? ["Pasukan R-A1", "Pasukan R-A2", "Pasukan R-A3", "Pasukan R-A4", "Pasukan R-A5"]
+                        : ["Pasukan M-A1", "Pasukan M-A2", "Pasukan M-A3", "Pasukan M-A4", "Pasukan M-A5"],
+                    B: category === 'rendah'
+                        ? ["Pasukan R-B1", "Pasukan R-B2", "Pasukan R-B3", "Pasukan R-B4", "Pasukan R-B5"]
+                        : ["Pasukan M-B1", "Pasukan M-B2", "Pasukan M-B3", "Pasukan M-B4", "Pasukan M-B5"]
+                },
+                matches: []
+            };
+
+            // Generate matches
+            ['A', 'B'].forEach(group => {
+                for (let i = 0; i < 5; i++) {
+                    for (let j = i + 1; j < 5; j++) {
+                        defaultData.matches.push({
+                            id: `${category}-${group}-${i}-${j}`,
+                            group: group,
+                            homeIdx: i,
+                            awayIdx: j,
+                            homeScore: null,
+                            awayScore: null,
+                            completed: false
+                        });
+                    }
                 }
             });
-            saveData();
+
+            try {
+                await setDoc(docRef, defaultData);
+            } catch (e) {
+                console.error("Error setting default data:", e);
+            }
         }
 
-        function saveData() {
-            localStorage.setItem('futsal_db_2026', JSON.stringify(db));
-            renderAll();
-        }
+        // Expose functions to window because module scope is isolated
+        window.saveData = async function() {
+            if (!db[currentCategory]) return;
+            
+            const docRef = doc(dbFirestore, 'artifacts', appId, 'public', 'data', 'tournament_data', currentCategory);
+            try {
+                await setDoc(docRef, db[currentCategory]);
+                renderAll(); // Optimistic update
+            } catch (e) {
+                console.error("Save error:", e);
+                alert("Gagal menyimpan data. Sila periksa sambungan internet.");
+            }
+        };
 
-        function renderAll() {
+        window.renderAll = function() {
+            if (!db[currentCategory]) return;
             renderMatches('A');
             renderMatches('B');
             renderTables();
-        }
+        };
 
-        function renderMatches(group) {
+        window.renderMatches = function(group) {
             const container = document.getElementById(`matches-${group}`);
-            const groupMatches = db[currentCategory].matches.filter(m => m.group === group);
-            const teamList = db[currentCategory].teamNames[group];
+            const data = db[currentCategory];
+            if (!data) return;
+
+            const groupMatches = data.matches.filter(m => m.group === group);
+            const teamList = data.teamNames[group];
             
             container.innerHTML = groupMatches.map(m => {
                 const homeName = teamList[m.homeIdx];
@@ -336,16 +440,16 @@
                     </div>
                 </div>
             `}).join('');
-        }
+        };
 
-        function updateTeamName(group, idx, newName) {
+        window.updateTeamName = function(group, idx, newName) {
             if (!newName.trim()) return;
             db[currentCategory].teamNames[group][idx] = newName.trim();
-            saveData();
+            window.saveData();
             showToast("Nama Pasukan Disimpan");
-        }
+        };
 
-        function updateScore(id, side, value) {
+        window.updateScore = function(id, side, value) {
             const match = db[currentCategory].matches.find(m => m.id === id);
             const score = value === '' ? null : parseInt(value);
             
@@ -353,25 +457,30 @@
             else match.awayScore = score;
             
             match.completed = (match.homeScore !== null && match.awayScore !== null);
-            saveData();
+            window.saveData();
             showToast("Skor Berjaya Dikemaskini");
-        }
+        };
 
-        function renderTables() {
+        window.renderTables = function() {
             ['A', 'B'].forEach(group => {
                 const tableBody = document.getElementById(`table-${group}`);
-                const stats = db[currentCategory].teamNames[group].map((name, idx) => ({
+                const data = db[currentCategory];
+                if (!data) return;
+
+                const stats = data.teamNames[group].map((name, idx) => ({
                     idx, name, played: 0, win: 0, draw: 0, loss: 0, points: 0
                 }));
 
-                db[currentCategory].matches.filter(m => m.group === group && m.completed).forEach(m => {
+                data.matches.filter(m => m.group === group && m.completed).forEach(m => {
                     const home = stats.find(s => s.idx === m.homeIdx);
                     const away = stats.find(s => s.idx === m.awayIdx);
 
-                    home.played++; away.played++;
-                    if (m.homeScore > m.awayScore) { home.win++; home.points += 3; away.loss++; }
-                    else if (m.homeScore < m.awayScore) { away.win++; away.points += 3; home.loss++; }
-                    else { home.draw++; home.points += 1; away.draw++; away.points += 1; }
+                    if (home && away) {
+                        home.played++; away.played++;
+                        if (m.homeScore > m.awayScore) { home.win++; home.points += 3; away.loss++; }
+                        else if (m.homeScore < m.awayScore) { away.win++; away.points += 3; home.loss++; }
+                        else { home.draw++; home.points += 1; away.draw++; away.points += 1; }
+                    }
                 });
 
                 stats.sort((a, b) => b.points - a.points || (b.win - a.win));
@@ -390,16 +499,16 @@
                     </tr>
                 `).join('');
             });
-        }
+        };
 
-        function switchCategory(cat) {
+        window.switchCategory = function(cat) {
             currentCategory = cat;
             document.getElementById('btn-rendah').className = cat === 'rendah' ? 'cat-active px-8 py-2.5 rounded-xl border border-black font-black transition-all uppercase tracking-widest text-xs' : 'px-8 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-400 font-black transition-all uppercase tracking-widest text-xs hover:border-black hover:text-black';
             document.getElementById('btn-menengah').className = cat === 'menengah' ? 'cat-active px-8 py-2.5 rounded-xl border border-black font-black transition-all uppercase tracking-widest text-xs' : 'px-8 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-400 font-black transition-all uppercase tracking-widest text-xs hover:border-black hover:text-black';
             renderAll();
-        }
+        };
 
-        function switchTab(tab) {
+        window.switchTab = function(tab) {
             document.getElementById('content-jadual').classList.toggle('hidden', tab !== 'jadual');
             document.getElementById('content-kedudukan').classList.toggle('hidden', tab !== 'kedudukan');
             const tabs = ['tab-jadual', 'tab-kedudukan'];
@@ -408,9 +517,9 @@
                 if (t.includes(tab)) el.className = 'pb-4 px-2 text-sm font-black uppercase tracking-widest transition-all tab-active';
                 else el.className = 'pb-4 px-2 text-sm font-black uppercase tracking-widest text-slate-500 hover:text-black transition-all';
             });
-        }
+        };
 
-        function toggleAdminMode() {
+        window.toggleAdminMode = function() {
             if (isAdmin) {
                 isAdmin = false;
                 updateAdminUI(false);
@@ -418,9 +527,9 @@
             } else {
                 document.getElementById('adminModal').classList.remove('hidden');
             }
-        }
+        };
 
-        function loginAdmin() {
+        window.loginAdmin = function() {
             const pass = document.getElementById('adminPass').value;
             if (pass === 'admin123') {
                 isAdmin = true;
@@ -431,9 +540,9 @@
                 alert('Akses Ditolak');
             }
             document.getElementById('adminPass').value = '';
-        }
+        };
 
-        function updateAdminUI(active) {
+        window.updateAdminUI = function(active) {
             const btn = document.getElementById('adminBtn');
             const status = document.getElementById('adminStatus');
             if (active) {
@@ -449,21 +558,16 @@
                 btn.style.color = '#fbbf24';
                 status.classList.add('hidden');
             }
-        }
+        };
 
-        function closeModal() { document.getElementById('adminModal').classList.add('hidden'); }
+        window.closeModal = function() { document.getElementById('adminModal').classList.add('hidden'); }
         
-        function showToast(text) {
+        window.showToast = function(text) {
             const toast = document.getElementById('toast');
             document.getElementById('toast-text').innerText = text;
             toast.classList.remove('translate-y-40');
             setTimeout(() => toast.classList.add('translate-y-40'), 2500);
         }
-
-        window.onload = () => {
-            initDB();
-            renderAll();
-        };
     </script>
 </body>
 </html>
