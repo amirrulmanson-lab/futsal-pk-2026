@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kejohanan Futsal Pendidikan Khas 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #0f172a; /* Slate 900 */
+            color: #f1f5f9;
+        }
+
+        .sport-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .sport-card:hover {
+            border-color: #38bdf8;
+            transform: translateY(-2px);
+        }
+
+        .tab-active { 
+            color: #38bdf8;
+            border-bottom: 4px solid #38bdf8;
+            font-weight: 800;
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .input-team-name {
+            background: transparent;
+            border-bottom: 1px dashed rgba(56, 189, 248, 0.3);
+            text-align: inherit;
+            width: 100%;
+            outline: none;
+        }
+
+        .input-team-name:focus {
+            border-bottom-color: #38bdf8;
+            color: #38bdf8;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+
+    <div id="app" class="max-w-5xl mx-auto p-4 md:p-8">
+        <!-- Header Section -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-10 mt-4 gap-6">
+            <div class="text-center md:text-left">
+                <span class="text-sky-400 font-bold tracking-widest uppercase text-sm">Edisi Rasmi</span>
+                <h1 class="text-4xl md:text-5xl font-800 tracking-tight leading-tight">
+                    <span class="gradient-text">Kejohanan Futsal</span><br>
+                    Pendidikan Khas 2026
+                </h1>
+            </div>
+            <div class="flex flex-col items-center md:items-end gap-2">
+                <button id="adminBtn" onclick="toggleAdminMode()" class="bg-sky-500 hover:bg-sky-400 text-slate-900 font-bold px-6 py-3 rounded-full transition-all flex items-center gap-2 shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Log Masuk Admin</span>
+                </button>
+                <p id="adminStatus" class="text-xs text-slate-400 hidden italic">Mod Pentadbir Aktif - Boleh Edit Nama & Skor</p>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="flex space-x-8 mb-8 border-b border-slate-800">
+            <button onclick="switchTab('jadual')" id="tab-jadual" class="pb-4 px-2 text-lg font-bold transition-all tab-active">Jadual</button>
+            <button onclick="switchTab('kedudukan')" id="tab-kedudukan" class="pb-4 px-2 text-lg font-bold text-slate-500 hover:text-slate-300 transition-all">Kedudukan</button>
+        </nav>
+
+        <!-- Section: Jadual Perlawanan -->
+        <section id="content-jadual" class="space-y-12">
+            <div id="group-a-section">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="h-10 w-2 bg-sky-500 rounded-full"></div>
+                    <h2 class="text-2xl font-bold uppercase tracking-wider text-sky-400">Kumpulan A</h2>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4" id="matches-A"></div>
+            </div>
+
+            <div id="group-b-section">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="h-10 w-2 bg-indigo-500 rounded-full"></div>
+                    <h2 class="text-2xl font-bold uppercase tracking-wider text-indigo-400">Kumpulan B</h2>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4" id="matches-B"></div>
+            </div>
+        </section>
+
+        <!-- Section: Kedudukan -->
+        <section id="content-kedudukan" class="hidden space-y-10">
+            <div class="sport-card rounded-2xl overflow-hidden p-6">
+                <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                    <span class="text-sky-400">#</span> Kedudukan Kumpulan A
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-slate-400 border-b border-slate-700">
+                                <th class="p-4 text-xs font-black uppercase tracking-widest">Pasukan</th>
+                                <th class="p-4 text-xs font-black uppercase tracking-widest">P</th>
+                                <th class="p-4 text-xs font-black uppercase tracking-widest text-green-400">M</th>
+                                <th class="p-4 text-xs font-black uppercase tracking-widest text-yellow-400">S</th>
+                                <th class="p-4 text-xs font-black uppercase tracking-widest text-red-400">K</th>
+                                <th class="p-4 text-xs font-black uppercase tracking-widest">MT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-A"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="sport-card rounded-2xl overflow-hidden p-6">
+                <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                    <span class="text-indigo-400">#</span> Kedudukan Kumpulan B
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-slate-400 border-b border-slate-700">
+                                <th class="p-4 text-xs font-black uppercase tracking-widest">Pasukan</th>
+                                <th class="p-4 text-xs font-black uppercase tracking-widest">P</th>
+                                <th class="p-4 text-xs font-black uppercase tracking-widest text-green-400">M</th>
+                                <th class="p-4 text-xs font-black uppercase tracking-widest text-yellow-400">S</th>
+                                <th class="p-4 text-xs font-black uppercase tracking-widest text-red-400">K</th>
+                                <th class="p-4 text-xs font-black uppercase tracking-widest">MT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-B"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Auth Modal -->
+        <div id="adminModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 w-full max-w-md shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-black">Akses Pentadbir</h3>
+                    <button onclick="closeModal()" class="text-slate-500 hover:text-white">✕</button>
+                </div>
+                <input type="password" id="adminPass" class="w-full bg-slate-800 border border-slate-700 p-4 rounded-xl mb-6 focus:ring-2 focus:ring-sky-500 outline-none text-white font-mono" placeholder="Masukkan Kata Laluan">
+                <button onclick="loginAdmin()" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-900 font-black p-4 rounded-xl transition-all shadow-lg shadow-sky-500/20">
+                    SAHKAN AKSES
+                </button>
+                <p class="text-center text-slate-500 text-xs mt-4">Kata laluan lalai: admin123</p>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-sky-500 text-slate-900 px-8 py-3 rounded-full font-bold shadow-2xl transform translate-y-32 transition-all duration-500 z-50 flex items-center gap-2">
+            <div id="toast-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <span id="toast-text">Data Dikemaskini</span>
+        </div>
+    </div>
+
+    <script>
+        // Initial Default Teams
+        let teamNames = JSON.parse(localStorage.getItem('futsal_team_names_2026')) || {
+            A: ["Pasukan A1", "Pasukan A2", "Pasukan A3", "Pasukan A4", "Pasukan A5"],
+            B: ["Pasukan B1", "Pasukan B2", "Pasukan B3", "Pasukan B4", "Pasukan B5"]
+        };
+
+        let isAdmin = false;
+        let matches = JSON.parse(localStorage.getItem('futsal_matches_2026_v2')) || [];
+
+        // Initialize Matches
+        function initMatches() {
+            if (matches.length === 0) {
+                ['A', 'B'].forEach(group => {
+                    for (let i = 0; i < 5; i++) {
+                        for (let j = i + 1; j < 5; j++) {
+                            matches.push({
+                                id: `${group}-${i}-${j}`,
+                                group: group,
+                                homeIdx: i,
+                                awayIdx: j,
+                                homeScore: null,
+                                awayScore: null,
+                                completed: false
+                            });
+                        }
+                    }
+                });
+                saveData();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('futsal_matches_2026_v2', JSON.stringify(matches));
+            localStorage.setItem('futsal_team_names_2026', JSON.stringify(teamNames));
+            renderAll();
+        }
+
+        function renderAll() {
+            renderMatches('A');
+            renderMatches('B');
+            renderTables();
+        }
+
+        function renderMatches(group) {
+            const container = document.getElementById(`matches-${group}`);
+            const groupMatches = matches.filter(m => m.group === group);
+            
+            container.innerHTML = groupMatches.map(m => {
+                const homeName = teamNames[group][m.homeIdx];
+                const awayName = teamNames[group][m.awayIdx];
+
+                return `
+                <div class="sport-card p-5 rounded-2xl flex items-center justify-between gap-4">
+                    <div class="flex-1 text-right font-bold text-sm md:text-base">
+                        ${isAdmin ? 
+                            `<input type="text" value="${homeName}" onchange="updateTeamName('${group}', ${m.homeIdx}, this.value)" class="input-team-name">` : 
+                            `<span>${homeName}</span>`
+                        }
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        ${isAdmin ? 
+                            `<input type="number" value="${m.homeScore ?? ''}" onchange="updateScore('${m.id}', 'home', this.value)" class="w-12 h-12 bg-slate-800 border border-slate-700 text-center rounded-xl font-black text-xl text-sky-400 focus:border-sky-500 outline-none">` : 
+                            `<span class="text-2xl font-black w-10 text-center ${m.homeScore !== null ? 'text-white' : 'text-slate-700'}">${m.homeScore ?? '-'}</span>`
+                        }
+                        <span class="text-slate-600 font-black text-xs uppercase tracking-tighter">vs</span>
+                        ${isAdmin ? 
+                            `<input type="number" value="${m.awayScore ?? ''}" onchange="updateScore('${m.id}', 'away', this.value)" class="w-12 h-12 bg-slate-800 border border-slate-700 text-center rounded-xl font-black text-xl text-sky-400 focus:border-sky-500 outline-none">` : 
+                            `<span class="text-2xl font-black w-10 text-center ${m.awayScore !== null ? 'text-white' : 'text-slate-700'}">${m.awayScore ?? '-'}</span>`
+                        }
+                    </div>
+
+                    <div class="flex-1 text-left font-bold text-sm md:text-base">
+                        ${isAdmin ? 
+                            `<input type="text" value="${awayName}" onchange="updateTeamName('${group}', ${m.awayIdx}, this.value)" class="input-team-name">` : 
+                            `<span>${awayName}</span>`
+                        }
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function updateTeamName(group, idx, newName) {
+            if (!newName.trim()) return;
+            teamNames[group][idx] = newName.trim();
+            saveData();
+            showToast("Nama Pasukan Dikemaskini");
+        }
+
+        function updateScore(id, side, value) {
+            const match = matches.find(m => m.id === id);
+            const score = value === '' ? null : parseInt(value);
+            
+            if (side === 'home') match.homeScore = score;
+            else match.awayScore = score;
+            
+            match.completed = (match.homeScore !== null && match.awayScore !== null);
+            saveData();
+            showToast("Skor Dikemaskini");
+        }
+
+        function renderTables() {
+            ['A', 'B'].forEach(group => {
+                const tableBody = document.getElementById(`table-${group}`);
+                const stats = teamNames[group].map((name, idx) => ({
+                    idx, name, played: 0, win: 0, draw: 0, loss: 0, points: 0
+                }));
+
+                matches.filter(m => m.group === group && m.completed).forEach(m => {
+                    const home = stats.find(s => s.idx === m.homeIdx);
+                    const away = stats.find(s => s.idx === m.awayIdx);
+
+                    home.played++; away.played++;
+                    if (m.homeScore > m.awayScore) { home.win++; home.points += 3; away.loss++; }
+                    else if (m.homeScore < m.awayScore) { away.win++; away.points += 3; home.loss++; }
+                    else { home.draw++; home.points += 1; away.draw++; away.points += 1; }
+                });
+
+                stats.sort((a, b) => b.points - a.points || (b.win - a.win));
+
+                tableBody.innerHTML = stats.map((s, idx) => `
+                    <tr class="border-t border-slate-800 hover:bg-slate-800/30 transition-colors">
+                        <td class="p-4 flex items-center gap-3">
+                            <span class="text-slate-500 font-mono text-xs w-4">${idx + 1}</span> 
+                            <span class="font-bold">${s.name}</span>
+                        </td>
+                        <td class="p-4 font-mono">${s.played}</td>
+                        <td class="p-4 font-mono text-green-400">${s.win}</td>
+                        <td class="p-4 font-mono text-yellow-400">${s.draw}</td>
+                        <td class="p-4 font-mono text-red-400">${s.loss}</td>
+                        <td class="p-4 font-black text-sky-400 bg-sky-400/5">${s.points}</td>
+                    </tr>
+                `).join('');
+            });
+        }
+
+        function switchTab(tab) {
+            document.getElementById('content-jadual').classList.toggle('hidden', tab !== 'jadual');
+            document.getElementById('content-kedudukan').classList.toggle('hidden', tab !== 'kedudukan');
+            const tabs = ['tab-jadual', 'tab-kedudukan'];
+            tabs.forEach(t => {
+                const el = document.getElementById(t);
+                if (t.includes(tab)) el.className = 'pb-4 px-2 text-lg font-bold transition-all tab-active';
+                else el.className = 'pb-4 px-2 text-lg font-bold text-slate-500 hover:text-slate-300 transition-all';
+            });
+        }
+
+        function toggleAdminMode() {
+            if (isAdmin) {
+                isAdmin = false;
+                updateAdminUI(false);
+                renderAll();
+            } else {
+                document.getElementById('adminModal').classList.remove('hidden');
+            }
+        }
+
+        function loginAdmin() {
+            const pass = document.getElementById('adminPass').value;
+            if (pass === 'admin123') {
+                isAdmin = true;
+                updateAdminUI(true);
+                closeModal();
+                renderAll();
+            } else {
+                alert('Kata laluan salah!');
+            }
+            document.getElementById('adminPass').value = '';
+        }
+
+        function updateAdminUI(active) {
+            const btn = document.getElementById('adminBtn');
+            const status = document.getElementById('adminStatus');
+            if (active) {
+                btn.innerText = 'Log Keluar Admin';
+                btn.classList.replace('bg-sky-500', 'bg-red-500');
+                btn.classList.replace('hover:bg-sky-400', 'hover:bg-red-400');
+                status.classList.remove('hidden');
+            } else {
+                btn.innerText = 'Log Masuk Admin';
+                btn.classList.replace('bg-red-500', 'bg-sky-500');
+                btn.classList.replace('hover:bg-red-400', 'hover:bg-sky-400');
+                status.classList.add('hidden');
+            }
+        }
+
+        function closeModal() { document.getElementById('adminModal').classList.add('hidden'); }
+        
+        function showToast(text) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-text').innerText = text;
+            toast.classList.remove('translate-y-32');
+            setTimeout(() => toast.classList.add('translate-y-32'), 2500);
+        }
+
+        window.onload = () => {
+            initMatches();
+            renderAll();
+        };
+    </script>
+</body>
+</html>
