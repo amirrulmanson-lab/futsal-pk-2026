@@ -10,130 +10,164 @@
         
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: #000000;
-            color: #ffffff;
-            /* Corak Belang Harimau Malaya */
-            background-image: 
-                radial-gradient(circle at 2px 2px, rgba(251, 191, 36, 0.05) 1px, transparent 0),
-                linear-gradient(135deg, #000 25%, transparent 25%), 
-                linear-gradient(225deg, #000 25%, transparent 25%), 
-                linear-gradient(45deg, #000 25%, transparent 25%), 
-                linear-gradient(315deg, #000 25%, #0a0a0a 25%);
-            background-position: 10px 10px, 0 0, 0 0, 0 0, 0 0;
-            background-size: 20px 20px, 40px 40px, 40px 40px, 40px 40px, 40px 40px;
+            background-color: #ffffff;
+            color: #1a1a1a;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Corak Brush Stroke Background */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(251, 191, 36, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 0, 0, 0.03) 0%, transparent 40%);
+            opacity: 0.8;
+        }
+
+        /* Simuasi Brush Strokes menggunakan CSS mask/linear gradients */
+        .brush-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1000' height='1000' viewBox='0 0 1000 1000'%3E%3Cpath d='M0 100 Q 250 50 500 100 T 1000 100' fill='none' stroke='%23fbbf24' stroke-width='2' opacity='0.1'/%3E%3Cpath d='M0 400 Q 300 350 600 400 T 1000 400' fill='none' stroke='%23000' stroke-width='1' opacity='0.05'/%3E%3Cpath d='M0 700 Q 200 750 400 700 T 1000 700' fill='none' stroke='%23fbbf24' stroke-width='3' opacity='0.08'/%3E%3C/svg%3E");
+            background-size: cover;
         }
 
         .sport-card {
-            background: rgba(17, 17, 17, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(251, 191, 36, 0.2);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.05);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .sport-card:hover {
             border-color: #fbbf24;
             transform: translateY(-4px);
-            box-shadow: 0 10px 30px -10px rgba(251, 191, 36, 0.3);
+            box-shadow: 0 15px 35px -10px rgba(251, 191, 36, 0.25);
         }
 
         .tab-active { 
-            color: #fbbf24;
+            color: #000;
             border-bottom: 4px solid #fbbf24;
             font-weight: 800;
         }
 
         .cat-active {
-            background-color: #fbbf24 !important;
-            color: #000000 !important;
-            border-color: #fbbf24 !important;
-            box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+            background-color: #000 !important;
+            color: #fbbf24 !important;
+            border-color: #000 !important;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
         }
 
         .gradient-text {
-            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            background: linear-gradient(90deg, #000, #444);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
         .input-team-name {
             background: transparent;
-            border-bottom: 1px dashed rgba(251, 191, 36, 0.4);
+            border-bottom: 1px dashed rgba(0, 0, 0, 0.2);
             text-align: inherit;
             width: 100%;
             outline: none;
-            color: #fbbf24;
+            color: #000;
         }
 
         .input-team-name:focus {
             border-bottom-color: #fbbf24;
-            color: #ffffff;
         }
 
-        /* Border Glow untuk Kumpulan */
-        .group-glow-a { border-left: 4px solid #fbbf24; }
-        .group-glow-b { border-left: 4px solid #d97706; }
+        .score-box {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+
+        .score-box:focus-within {
+            border-color: #fbbf24;
+            background-color: #fff;
+        }
 
         .btn-admin {
-            background: linear-gradient(135deg, #fbbf24, #d97706);
+            background: #000;
+            color: #fbbf24;
+            border: 2px solid #000;
+        }
+
+        .btn-admin:hover {
+            background: transparent;
             color: #000;
+        }
+
+        /* Table Styling */
+        th {
+            background-color: #fcfcfc;
         }
     </style>
 </head>
 <body class="min-h-screen pb-12">
+    <div class="brush-overlay"></div>
 
     <div id="app" class="max-w-5xl mx-auto p-4 md:p-8">
         <!-- Header Section -->
         <header class="flex flex-col md:flex-row justify-between items-center mb-10 mt-4 gap-6">
             <div class="text-center md:text-left">
-                <span class="text-amber-400 font-bold tracking-[0.2em] uppercase text-xs border-b border-amber-400/30 pb-1">Selamanya Harimau Malaya</span>
+                <span class="text-amber-500 font-bold tracking-[0.2em] uppercase text-xs border-b-2 border-amber-400 pb-1">Harimau Malaya Edition</span>
                 <h1 class="text-4xl md:text-5xl font-900 tracking-tighter leading-tight mt-3">
                     <span class="gradient-text">KEJOHANAN FUTSAL</span><br>
-                    <span class="text-white">PENDIDIKAN KHAS 2026</span>
+                    <span class="text-amber-500">PENDIDIKAN KHAS 2026</span>
                 </h1>
             </div>
             <div class="flex flex-col items-center md:items-end gap-2">
-                <button id="adminBtn" onclick="toggleAdminMode()" class="btn-admin font-black px-8 py-3 rounded-full transition-all flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95">
+                <button id="adminBtn" onclick="toggleAdminMode()" class="btn-admin font-black px-8 py-3 rounded-full transition-all flex items-center gap-2 shadow-lg active:scale-95">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
                     </svg>
                     <span>ADMIN PORTAL</span>
                 </button>
-                <p id="adminStatus" class="text-xs text-amber-500 hidden italic font-bold">MOD KEMASKINI AKTIF</p>
+                <p id="adminStatus" class="text-xs text-amber-600 hidden italic font-bold uppercase tracking-widest">Akses Editor Aktif</p>
             </div>
         </header>
 
         <!-- Category Selection -->
         <div class="flex justify-center md:justify-start gap-3 mb-8">
-            <button onclick="switchCategory('rendah')" id="btn-rendah" class="cat-active px-8 py-2.5 rounded-xl border border-slate-800 font-black transition-all uppercase tracking-widest text-xs">Rendah</button>
-            <button onclick="switchCategory('menengah')" id="btn-menengah" class="px-8 py-2.5 rounded-xl border border-slate-800 font-black transition-all uppercase tracking-widest text-xs hover:border-amber-500 text-slate-400 hover:text-amber-400">Menengah</button>
+            <button onclick="switchCategory('rendah')" id="btn-rendah" class="cat-active px-8 py-2.5 rounded-xl border border-slate-200 font-black transition-all uppercase tracking-widest text-xs">Rendah</button>
+            <button onclick="switchCategory('menengah')" id="btn-menengah" class="px-8 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-400 font-black transition-all uppercase tracking-widest text-xs hover:border-black hover:text-black">Menengah</button>
         </div>
 
         <!-- Navigation -->
-        <nav class="flex space-x-10 mb-8 border-b border-white/10">
+        <nav class="flex space-x-10 mb-8 border-b border-slate-100">
             <button onclick="switchTab('jadual')" id="tab-jadual" class="pb-4 px-2 text-sm font-black uppercase tracking-widest transition-all tab-active">Jadual Perlawanan</button>
-            <button onclick="switchTab('kedudukan')" id="tab-kedudukan" class="pb-4 px-2 text-sm font-black uppercase tracking-widest text-slate-500 hover:text-white transition-all">Carta Kedudukan</button>
+            <button onclick="switchTab('kedudukan')" id="tab-kedudukan" class="pb-4 px-2 text-sm font-black uppercase tracking-widest text-slate-400 hover:text-black transition-all">Carta Kedudukan</button>
         </nav>
 
         <!-- Section: Jadual Perlawanan -->
         <section id="content-jadual" class="space-y-12">
             <div id="group-a-section">
                 <div class="flex items-center gap-4 mb-6">
-                    <div class="h-8 w-2 bg-amber-400 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.5)]"></div>
-                    <h2 class="text-xl font-black uppercase tracking-tighter text-amber-400">Kumpulan A</h2>
+                    <div class="h-8 w-2 bg-amber-400 rounded-full"></div>
+                    <h2 class="text-xl font-black uppercase tracking-tighter text-black">Kumpulan A</h2>
                 </div>
                 <div class="grid md:grid-cols-2 gap-4" id="matches-A"></div>
             </div>
 
             <div id="group-b-section">
                 <div class="flex items-center gap-4 mb-6">
-                    <div class="h-8 w-2 bg-amber-600 rounded-full shadow-[0_0_15px_rgba(217,119,6,0.5)]"></div>
-                    <h2 class="text-xl font-black uppercase tracking-tighter text-amber-600">Kumpulan B</h2>
+                    <div class="h-8 w-2 bg-black rounded-full"></div>
+                    <h2 class="text-xl font-black uppercase tracking-tighter text-black">Kumpulan B</h2>
                 </div>
                 <div class="grid md:grid-cols-2 gap-4" id="matches-B"></div>
             </div>
@@ -141,20 +175,20 @@
 
         <!-- Section: Kedudukan -->
         <section id="content-kedudukan" class="hidden space-y-10">
-            <div class="sport-card rounded-3xl overflow-hidden p-8 border-t-4 border-t-amber-400">
+            <div class="sport-card rounded-3xl overflow-hidden p-8 border-t-8 border-t-amber-400">
                 <h2 class="text-xl font-black mb-8 flex items-center gap-3 uppercase tracking-tighter">
-                    <span class="bg-amber-400 text-black px-2 py-1 rounded text-xs">A</span> Kedudukan Kumpulan A
+                    <span class="bg-black text-amber-400 px-3 py-1 rounded text-xs">KUM A</span> Kedudukan Semasa
                 </h2>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="text-amber-500/50 border-b border-white/5">
+                            <tr class="text-slate-400 border-b border-slate-50">
                                 <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em]">Pasukan</th>
                                 <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em]">P</th>
-                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-green-500">M</th>
-                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">S</th>
-                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-red-500">K</th>
-                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-white">MT</th>
+                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-green-600">M</th>
+                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-amber-600">S</th>
+                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-red-600">K</th>
+                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-black">MT</th>
                             </tr>
                         </thead>
                         <tbody id="table-A"></tbody>
@@ -162,20 +196,20 @@
                 </div>
             </div>
 
-            <div class="sport-card rounded-3xl overflow-hidden p-8 border-t-4 border-t-amber-600">
+            <div class="sport-card rounded-3xl overflow-hidden p-8 border-t-8 border-t-black">
                 <h2 class="text-xl font-black mb-8 flex items-center gap-3 uppercase tracking-tighter">
-                    <span class="bg-amber-600 text-black px-2 py-1 rounded text-xs">B</span> Kedudukan Kumpulan B
+                    <span class="bg-amber-400 text-black px-3 py-1 rounded text-xs">KUM B</span> Kedudukan Semasa
                 </h2>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="text-amber-500/50 border-b border-white/5">
+                            <tr class="text-slate-400 border-b border-slate-50">
                                 <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em]">Pasukan</th>
                                 <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em]">P</th>
-                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-green-500">M</th>
-                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">S</th>
-                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-red-500">K</th>
-                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-white">MT</th>
+                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-green-600">M</th>
+                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-amber-600">S</th>
+                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-red-600">K</th>
+                                <th class="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-black">MT</th>
                             </tr>
                         </thead>
                         <tbody id="table-B"></tbody>
@@ -185,21 +219,21 @@
         </section>
 
         <!-- Auth Modal -->
-        <div id="adminModal" class="fixed inset-0 bg-black/95 backdrop-blur-xl hidden flex items-center justify-center p-4 z-50">
-            <div class="bg-neutral-900 border border-amber-500/30 rounded-[2.5rem] p-10 w-full max-w-md shadow-[0_0_50px_rgba(251,191,36,0.1)]">
+        <div id="adminModal" class="fixed inset-0 bg-white/90 backdrop-blur-xl hidden flex items-center justify-center p-4 z-50">
+            <div class="bg-white border-2 border-black rounded-[2.5rem] p-10 w-full max-w-md shadow-2xl">
                 <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-2xl font-black gradient-text">PENGESAHAN ADMIN</h3>
-                    <button onclick="closeModal()" class="text-slate-500 hover:text-white transition-colors">✕</button>
+                    <h3 class="text-2xl font-black text-black">PENGESAHAN</h3>
+                    <button onclick="closeModal()" class="text-slate-300 hover:text-black transition-colors">✕</button>
                 </div>
-                <input type="password" id="adminPass" class="w-full bg-black border border-white/10 p-5 rounded-2xl mb-6 focus:ring-2 focus:ring-amber-500 outline-none text-white font-mono placeholder:text-neutral-700" placeholder="KATA LALUAN">
-                <button onclick="loginAdmin()" class="w-full btn-admin font-black p-5 rounded-2xl transition-all shadow-lg active:scale-95 uppercase tracking-widest">
-                    AKSES SISTEM
+                <input type="password" id="adminPass" class="w-full bg-slate-50 border border-slate-200 p-5 rounded-2xl mb-6 focus:ring-2 focus:ring-amber-400 outline-none text-black font-mono placeholder:text-slate-400" placeholder="KATA LALUAN">
+                <button onclick="loginAdmin()" class="w-full bg-black text-amber-400 font-black p-5 rounded-2xl transition-all shadow-lg active:scale-95 uppercase tracking-widest">
+                    MASUK MOD EDITOR
                 </button>
             </div>
         </div>
 
         <!-- Toast Notification -->
-        <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-amber-400 text-black px-10 py-4 rounded-full font-black shadow-[0_10px_40px_rgba(251,191,36,0.4)] transform translate-y-40 transition-all duration-500 z-50 flex items-center gap-3 uppercase text-xs tracking-widest">
+        <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-black text-amber-400 px-10 py-4 rounded-full font-black shadow-2xl transform translate-y-40 transition-all duration-500 z-50 flex items-center gap-3 uppercase text-xs tracking-widest border border-amber-400/30">
             <div id="toast-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
@@ -210,11 +244,9 @@
     </div>
 
     <script>
-        // State Management
         let currentCategory = 'rendah';
         let isAdmin = false;
 
-        // Data Storage Structure
         let db = JSON.parse(localStorage.getItem('futsal_db_2026')) || {
             rendah: {
                 teamNames: {
@@ -276,30 +308,30 @@
                 const awayName = teamList[m.awayIdx];
 
                 return `
-                <div class="sport-card p-6 rounded-3xl flex items-center justify-between gap-4 border-l-4 ${group === 'A' ? 'border-l-amber-400' : 'border-l-amber-700'}">
+                <div class="sport-card p-6 rounded-3xl flex items-center justify-between gap-4 border-l-8 ${group === 'A' ? 'border-l-amber-400' : 'border-l-black'}">
                     <div class="flex-1 text-right font-black text-xs md:text-sm tracking-tight">
                         ${isAdmin ? 
                             `<input type="text" value="${homeName}" onchange="updateTeamName('${group}', ${m.homeIdx}, this.value)" class="input-team-name text-right">` : 
-                            `<span class="text-white">${homeName}</span>`
+                            `<span class="text-slate-800">${homeName}</span>`
                         }
                     </div>
                     
-                    <div class="flex items-center gap-3 px-2">
+                    <div class="flex items-center gap-2 px-1">
                         ${isAdmin ? 
-                            `<input type="number" value="${m.homeScore ?? ''}" onchange="updateScore('${m.id}', 'home', this.value)" class="w-12 h-14 bg-black border border-white/10 text-center rounded-xl font-black text-2xl text-amber-400 focus:border-amber-400 outline-none">` : 
-                            `<span class="text-3xl font-black w-10 text-center ${m.homeScore !== null ? 'text-amber-400' : 'text-neutral-800'}">${m.homeScore ?? '0'}</span>`
+                            `<div class="score-box p-1 rounded-xl"><input type="number" value="${m.homeScore ?? ''}" onchange="updateScore('${m.id}', 'home', this.value)" class="w-10 h-12 bg-transparent text-center font-black text-xl text-black outline-none"></div>` : 
+                            `<span class="text-2xl font-black w-8 text-center ${m.homeScore !== null ? 'text-black' : 'text-slate-200'}">${m.homeScore ?? '0'}</span>`
                         }
-                        <div class="h-1 w-3 bg-neutral-800 rounded-full"></div>
+                        <span class="text-[10px] font-black text-slate-300">-</span>
                         ${isAdmin ? 
-                            `<input type="number" value="${m.awayScore ?? ''}" onchange="updateScore('${m.id}', 'away', this.value)" class="w-12 h-14 bg-black border border-white/10 text-center rounded-xl font-black text-2xl text-amber-400 focus:border-amber-400 outline-none">` : 
-                            `<span class="text-3xl font-black w-10 text-center ${m.awayScore !== null ? 'text-amber-400' : 'text-neutral-800'}">${m.awayScore ?? '0'}</span>`
+                            `<div class="score-box p-1 rounded-xl"><input type="number" value="${m.awayScore ?? ''}" onchange="updateScore('${m.id}', 'away', this.value)" class="w-10 h-12 bg-transparent text-center font-black text-xl text-black outline-none"></div>` : 
+                            `<span class="text-2xl font-black w-8 text-center ${m.awayScore !== null ? 'text-black' : 'text-slate-200'}">${m.awayScore ?? '0'}</span>`
                         }
                     </div>
 
                     <div class="flex-1 text-left font-black text-xs md:text-sm tracking-tight">
                         ${isAdmin ? 
                             `<input type="text" value="${awayName}" onchange="updateTeamName('${group}', ${m.awayIdx}, this.value)" class="input-team-name text-left">` : 
-                            `<span class="text-white">${awayName}</span>`
+                            `<span class="text-slate-800">${awayName}</span>`
                         }
                     </div>
                 </div>
@@ -310,7 +342,7 @@
             if (!newName.trim()) return;
             db[currentCategory].teamNames[group][idx] = newName.trim();
             saveData();
-            showToast("Nama Pasukan Dikemaskini");
+            showToast("Nama Pasukan Disimpan");
         }
 
         function updateScore(id, side, value) {
@@ -322,7 +354,7 @@
             
             match.completed = (match.homeScore !== null && match.awayScore !== null);
             saveData();
-            showToast("Skor Berjaya Disimpan");
+            showToast("Skor Berjaya Dikemaskini");
         }
 
         function renderTables() {
@@ -345,16 +377,16 @@
                 stats.sort((a, b) => b.points - a.points || (b.win - a.win));
 
                 tableBody.innerHTML = stats.map((s, idx) => `
-                    <tr class="border-t border-white/5 hover:bg-amber-400/5 transition-colors">
+                    <tr class="border-t border-slate-50 hover:bg-slate-50 transition-colors">
                         <td class="p-5 flex items-center gap-4">
-                            <span class="text-amber-500/30 font-black text-xs italic">${idx + 1}</span> 
-                            <span class="font-black text-sm tracking-tight">${s.name}</span>
+                            <span class="text-slate-200 font-black text-xs">${idx + 1}</span> 
+                            <span class="font-black text-sm tracking-tight text-slate-700">${s.name}</span>
                         </td>
-                        <td class="p-5 font-black text-neutral-400">${s.played}</td>
-                        <td class="p-5 font-black text-green-500">${s.win}</td>
+                        <td class="p-5 font-black text-slate-400">${s.played}</td>
+                        <td class="p-5 font-black text-green-600">${s.win}</td>
                         <td class="p-5 font-black text-amber-500">${s.draw}</td>
                         <td class="p-5 font-black text-red-500">${s.loss}</td>
-                        <td class="p-5 font-black text-white bg-white/5 shadow-inner">${s.points}</td>
+                        <td class="p-5 font-black text-black bg-slate-50/50">${s.points}</td>
                     </tr>
                 `).join('');
             });
@@ -362,8 +394,8 @@
 
         function switchCategory(cat) {
             currentCategory = cat;
-            document.getElementById('btn-rendah').classList.toggle('cat-active', cat === 'rendah');
-            document.getElementById('btn-menengah').classList.toggle('cat-active', cat === 'menengah');
+            document.getElementById('btn-rendah').className = cat === 'rendah' ? 'cat-active px-8 py-2.5 rounded-xl border border-black font-black transition-all uppercase tracking-widest text-xs' : 'px-8 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-400 font-black transition-all uppercase tracking-widest text-xs hover:border-black hover:text-black';
+            document.getElementById('btn-menengah').className = cat === 'menengah' ? 'cat-active px-8 py-2.5 rounded-xl border border-black font-black transition-all uppercase tracking-widest text-xs' : 'px-8 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-400 font-black transition-all uppercase tracking-widest text-xs hover:border-black hover:text-black';
             renderAll();
         }
 
@@ -374,7 +406,7 @@
             tabs.forEach(t => {
                 const el = document.getElementById(t);
                 if (t.includes(tab)) el.className = 'pb-4 px-2 text-sm font-black uppercase tracking-widest transition-all tab-active';
-                else el.className = 'pb-4 px-2 text-sm font-black uppercase tracking-widest text-slate-500 hover:text-white transition-all';
+                else el.className = 'pb-4 px-2 text-sm font-black uppercase tracking-widest text-slate-400 hover:text-black transition-all';
             });
         }
 
@@ -396,7 +428,7 @@
                 closeModal();
                 renderAll();
             } else {
-                alert('Akses Ditolak: Kata Laluan Salah');
+                alert('Akses Ditolak');
             }
             document.getElementById('adminPass').value = '';
         }
@@ -406,13 +438,15 @@
             const status = document.getElementById('adminStatus');
             if (active) {
                 btn.innerText = 'LOG KELUAR';
-                btn.style.background = 'linear-gradient(135deg, #ef4444, #991b1b)';
+                btn.style.background = '#ef4444';
+                btn.style.borderColor = '#ef4444';
                 btn.style.color = '#fff';
                 status.classList.remove('hidden');
             } else {
                 btn.innerText = 'ADMIN PORTAL';
-                btn.style.background = 'linear-gradient(135deg, #fbbf24, #d97706)';
-                btn.style.color = '#000';
+                btn.style.background = '#000';
+                btn.style.borderColor = '#000';
+                btn.style.color = '#fbbf24';
                 status.classList.add('hidden');
             }
         }
