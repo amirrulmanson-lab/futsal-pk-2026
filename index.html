@@ -31,7 +31,6 @@
             opacity: 0.8;
         }
 
-        /* Simuasi Brush Strokes menggunakan CSS mask/linear gradients */
         .brush-overlay {
             position: fixed;
             top: 0;
@@ -112,14 +111,22 @@
             color: #000;
         }
 
-        /* Table Styling */
-        th {
-            background-color: #f8fafc;
-        }
+        th { background-color: #f8fafc; }
         
-        /* Loading overlay */
-        #loading-overlay {
-            display: flex;
+        #loading-overlay { display: flex; }
+
+        /* Bracket lines for Knockout */
+        .bracket-connector {
+            position: relative;
+        }
+        .bracket-connector::after {
+            content: '';
+            position: absolute;
+            right: -1rem;
+            top: 50%;
+            width: 1rem;
+            height: 2px;
+            background-color: #e2e8f0;
         }
     </style>
 </head>
@@ -134,7 +141,7 @@
         </div>
     </div>
 
-    <div id="app" class="max-w-5xl mx-auto p-4 md:p-8">
+    <div id="app" class="max-w-6xl mx-auto p-4 md:p-8">
         <!-- Header Section -->
         <header class="flex flex-col md:flex-row justify-between items-center mb-10 mt-4 gap-6">
             <div class="text-center md:text-left">
@@ -162,12 +169,13 @@
         </div>
 
         <!-- Navigation -->
-        <nav class="flex space-x-10 mb-8 border-b border-slate-300">
-            <button onclick="switchTab('jadual')" id="tab-jadual" class="pb-4 px-2 text-sm font-black uppercase tracking-widest transition-all tab-active">Jadual Perlawanan</button>
-            <button onclick="switchTab('kedudukan')" id="tab-kedudukan" class="pb-4 px-2 text-sm font-black uppercase tracking-widest text-slate-500 hover:text-black transition-all">Carta Kedudukan</button>
+        <nav class="flex space-x-4 md:space-x-10 mb-8 border-b border-slate-300 overflow-x-auto">
+            <button onclick="switchTab('jadual')" id="tab-jadual" class="pb-4 px-2 text-sm font-black uppercase tracking-widest transition-all tab-active whitespace-nowrap">Peringkat Kumpulan</button>
+            <button onclick="switchTab('kedudukan')" id="tab-kedudukan" class="pb-4 px-2 text-sm font-black uppercase tracking-widest text-slate-500 hover:text-black transition-all whitespace-nowrap">Carta Kedudukan</button>
+            <button onclick="switchTab('kalahmati')" id="tab-kalahmati" class="pb-4 px-2 text-sm font-black uppercase tracking-widest text-slate-500 hover:text-black transition-all whitespace-nowrap">Peringkat Kalah Mati</button>
         </nav>
 
-        <!-- Section: Jadual Perlawanan -->
+        <!-- Section: Jadual Perlawanan (Group) -->
         <section id="content-jadual" class="space-y-12">
             <div id="group-a-section">
                 <div class="flex items-center gap-4 mb-6">
@@ -231,6 +239,51 @@
             </div>
         </section>
 
+        <!-- Section: Kalah Mati (Knockout) -->
+        <section id="content-kalahmati" class="hidden space-y-12">
+            
+            <!-- Separuh Akhir -->
+            <div>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="h-8 w-2 bg-red-600 rounded-full"></div>
+                    <h2 class="text-xl font-black uppercase tracking-tighter text-black">Separuh Akhir</h2>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Semi 1 -->
+                    <div class="sport-card p-6 rounded-3xl border-l-8 border-l-red-600 relative">
+                        <div class="absolute -top-3 right-4 bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">SF 1</div>
+                        <div class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-widest text-center">Johan A vs N.Johan B</div>
+                        
+                        <!-- Content rendered dynamically -->
+                        <div id="knockout-semi1"></div>
+                    </div>
+
+                    <!-- Semi 2 -->
+                    <div class="sport-card p-6 rounded-3xl border-l-8 border-l-red-600 relative">
+                        <div class="absolute -top-3 right-4 bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">SF 2</div>
+                        <div class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-widest text-center">Johan B vs N.Johan A</div>
+                        
+                        <!-- Content rendered dynamically -->
+                        <div id="knockout-semi2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Akhir -->
+            <div class="max-w-2xl mx-auto pt-8 border-t border-slate-200">
+                <div class="flex items-center justify-center gap-4 mb-6">
+                    <div class="h-8 w-2 bg-amber-400 rounded-full"></div>
+                    <h2 class="text-2xl font-black uppercase tracking-tighter text-amber-600">Perlawanan Akhir</h2>
+                    <div class="h-8 w-2 bg-amber-400 rounded-full"></div>
+                </div>
+                <div class="sport-card p-8 rounded-3xl border-4 border-amber-400 relative shadow-xl">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-400 text-black text-xs font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-lg">PENTAS FINAL</div>
+                    <div id="knockout-final"></div>
+                </div>
+            </div>
+
+        </section>
+
         <!-- Auth Modal -->
         <div id="adminModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
             <div class="bg-white border-2 border-black rounded-[2.5rem] p-10 w-full max-w-md shadow-2xl">
@@ -258,8 +311,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Configuration
         const firebaseConfig = {
@@ -272,62 +325,55 @@
             measurementId: "G-1SKFYKN0WG"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const dbFirestore = getFirestore(app);
         
-        // Use Global App ID for proper Firestore pathing
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'futsal-pend-khas-melaka-default';
 
-        // Global State
         let currentCategory = 'rendah';
         let isAdmin = false;
         
-        // Local state mirror for rendering
+        // Local state
         let db = {
             rendah: null,
             menengah: null
         };
 
-        // Initial Authentication & Data Loading
         const initAuth = async () => {
             try {
                 await signInAnonymously(auth);
-                console.log("Authenticated anonymously");
                 initDataListeners();
             } catch (error) {
                 console.error("Auth Error:", error);
-                alert("Ralat sambungan ke pangkalan data.");
+                alert("Ralat sambungan.");
             }
         };
 
         initAuth();
 
         function initDataListeners() {
-            // Listen to 'rendah' document
-            const rendahDoc = doc(dbFirestore, 'artifacts', appId, 'public', 'data', 'tournament_data', 'rendah');
-            onSnapshot(rendahDoc, (docSnap) => {
-                if (docSnap.exists()) {
-                    db.rendah = docSnap.data();
-                    if (currentCategory === 'rendah') renderAll();
-                    checkLoading();
-                } else {
-                    initDefaultData('rendah', rendahDoc);
-                }
-            }, (error) => console.error("Snapshot error:", error));
-
-            // Listen to 'menengah' document
-            const menengahDoc = doc(dbFirestore, 'artifacts', appId, 'public', 'data', 'tournament_data', 'menengah');
-            onSnapshot(menengahDoc, (docSnap) => {
-                if (docSnap.exists()) {
-                    db.menengah = docSnap.data();
-                    if (currentCategory === 'menengah') renderAll();
-                    checkLoading();
-                } else {
-                    initDefaultData('menengah', menengahDoc);
-                }
-            }, (error) => console.error("Snapshot error:", error));
+            ['rendah', 'menengah'].forEach(cat => {
+                const docRef = doc(dbFirestore, 'artifacts', appId, 'public', 'data', 'tournament_data', cat);
+                onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        let data = docSnap.data();
+                        // Migration: Ensure knockout structure exists
+                        if (!data.knockout) {
+                            data.knockout = {
+                                semi1: { homeScore: null, awayScore: null },
+                                semi2: { homeScore: null, awayScore: null },
+                                final: { homeScore: null, awayScore: null }
+                            };
+                        }
+                        db[cat] = data;
+                        if (currentCategory === cat) renderAll();
+                        checkLoading();
+                    } else {
+                        initDefaultData(cat, docRef);
+                    }
+                });
+            });
         }
 
         function checkLoading() {
@@ -341,7 +387,6 @@
         }
 
         async function initDefaultData(category, docRef) {
-            console.log(`Initializing default data for ${category}...`);
             const defaultData = {
                 teamNames: {
                     A: category === 'rendah' 
@@ -351,10 +396,14 @@
                         ? ["Pasukan R-B1", "Pasukan R-B2", "Pasukan R-B3", "Pasukan R-B4", "Pasukan R-B5"]
                         : ["Pasukan M-B1", "Pasukan M-B2", "Pasukan M-B3", "Pasukan M-B4", "Pasukan M-B5"]
                 },
-                matches: []
+                matches: [],
+                knockout: {
+                    semi1: { homeScore: null, awayScore: null },
+                    semi2: { homeScore: null, awayScore: null },
+                    final: { homeScore: null, awayScore: null }
+                }
             };
 
-            // Generate matches
             ['A', 'B'].forEach(group => {
                 for (let i = 0; i < 5; i++) {
                     for (let j = i + 1; j < 5; j++) {
@@ -371,125 +420,99 @@
                 }
             });
 
-            try {
-                await setDoc(docRef, defaultData);
-            } catch (e) {
-                console.error("Error setting default data:", e);
-            }
+            try { await setDoc(docRef, defaultData); } catch (e) { console.error(e); }
         }
 
-        // Expose functions to window because module scope is isolated
         window.saveData = async function() {
             if (!db[currentCategory]) return;
-            
             const docRef = doc(dbFirestore, 'artifacts', appId, 'public', 'data', 'tournament_data', currentCategory);
             try {
                 await setDoc(docRef, db[currentCategory]);
-                renderAll(); // Optimistic update
-            } catch (e) {
-                console.error("Save error:", e);
-                alert("Gagal menyimpan data. Sila periksa sambungan internet.");
-            }
+                renderAll();
+            } catch (e) { alert("Gagal menyimpan data."); }
         };
+
+        // --- CALCULATION LOGIC ---
+
+        function getStandings(group) {
+            const data = db[currentCategory];
+            if (!data) return [];
+
+            const stats = data.teamNames[group].map((name, idx) => ({
+                idx, name, played: 0, win: 0, draw: 0, loss: 0, points: 0, goalDiff: 0
+            }));
+
+            data.matches.filter(m => m.group === group && m.completed).forEach(m => {
+                const home = stats.find(s => s.idx === m.homeIdx);
+                const away = stats.find(s => s.idx === m.awayIdx);
+
+                if (home && away) {
+                    home.played++; away.played++;
+                    const gd = m.homeScore - m.awayScore;
+                    home.goalDiff += gd;
+                    away.goalDiff -= gd;
+
+                    if (m.homeScore > m.awayScore) { home.win++; home.points += 3; away.loss++; }
+                    else if (m.homeScore < m.awayScore) { away.win++; away.points += 3; home.loss++; }
+                    else { home.draw++; home.points += 1; away.draw++; away.points += 1; }
+                }
+            });
+
+            // Sort: Points > Goal Diff > Wins
+            return stats.sort((a, b) => b.points - a.points || b.goalDiff - a.goalDiff || b.win - a.win);
+        }
+
+        // --- RENDER LOGIC ---
 
         window.renderAll = function() {
             if (!db[currentCategory]) return;
             renderMatches('A');
             renderMatches('B');
             renderTables();
+            renderKnockout();
         };
 
         window.renderMatches = function(group) {
             const container = document.getElementById(`matches-${group}`);
             const data = db[currentCategory];
-            if (!data) return;
-
             const groupMatches = data.matches.filter(m => m.group === group);
             const teamList = data.teamNames[group];
             
-            container.innerHTML = groupMatches.map(m => {
-                const homeName = teamList[m.homeIdx];
-                const awayName = teamList[m.awayIdx];
-
-                return `
+            container.innerHTML = groupMatches.map(m => `
                 <div class="sport-card p-6 rounded-3xl flex items-center justify-between gap-4 border-l-8 ${group === 'A' ? 'border-l-amber-400' : 'border-l-black'}">
-                    <div class="flex-1 text-right font-black text-xs md:text-sm tracking-tight">
-                        ${isAdmin ? 
-                            `<input type="text" value="${homeName}" onchange="updateTeamName('${group}', ${m.homeIdx}, this.value)" class="input-team-name text-right">` : 
-                            `<span class="text-slate-800">${homeName}</span>`
-                        }
+                    <div class="flex-1 text-right font-black text-xs md:text-sm tracking-tight truncate">
+                        ${isAdmin ? `<input type="text" value="${teamList[m.homeIdx]}" onchange="updateTeamName('${group}', ${m.homeIdx}, this.value)" class="input-team-name text-right">` : `<span class="text-slate-800">${teamList[m.homeIdx]}</span>`}
                     </div>
-                    
-                    <div class="flex items-center gap-2 px-1">
-                        ${isAdmin ? 
-                            `<div class="score-box p-1 rounded-xl"><input type="number" value="${m.homeScore ?? ''}" onchange="updateScore('${m.id}', 'home', this.value)" class="w-10 h-12 bg-transparent text-center font-black text-xl text-black outline-none"></div>` : 
-                            `<span class="text-2xl font-black w-8 text-center ${m.homeScore !== null ? 'text-black' : 'text-slate-300'}">${m.homeScore ?? '0'}</span>`
-                        }
+                    <div class="flex items-center gap-2 px-1 shrink-0">
+                        ${renderScoreInput(m.id, 'home', m.homeScore)}
                         <span class="text-[10px] font-black text-slate-300">-</span>
-                        ${isAdmin ? 
-                            `<div class="score-box p-1 rounded-xl"><input type="number" value="${m.awayScore ?? ''}" onchange="updateScore('${m.id}', 'away', this.value)" class="w-10 h-12 bg-transparent text-center font-black text-xl text-black outline-none"></div>` : 
-                            `<span class="text-2xl font-black w-8 text-center ${m.awayScore !== null ? 'text-black' : 'text-slate-300'}">${m.awayScore ?? '0'}</span>`
-                        }
+                        ${renderScoreInput(m.id, 'away', m.awayScore)}
                     </div>
-
-                    <div class="flex-1 text-left font-black text-xs md:text-sm tracking-tight">
-                        ${isAdmin ? 
-                            `<input type="text" value="${awayName}" onchange="updateTeamName('${group}', ${m.awayIdx}, this.value)" class="input-team-name text-left">` : 
-                            `<span class="text-slate-800">${awayName}</span>`
-                        }
+                    <div class="flex-1 text-left font-black text-xs md:text-sm tracking-tight truncate">
+                        ${isAdmin ? `<input type="text" value="${teamList[m.awayIdx]}" onchange="updateTeamName('${group}', ${m.awayIdx}, this.value)" class="input-team-name text-left">` : `<span class="text-slate-800">${teamList[m.awayIdx]}</span>`}
                     </div>
                 </div>
-            `}).join('');
+            `).join('');
         };
 
-        window.updateTeamName = function(group, idx, newName) {
-            if (!newName.trim()) return;
-            db[currentCategory].teamNames[group][idx] = newName.trim();
-            window.saveData();
-            showToast("Nama Pasukan Disimpan");
-        };
-
-        window.updateScore = function(id, side, value) {
-            const match = db[currentCategory].matches.find(m => m.id === id);
-            const score = value === '' ? null : parseInt(value);
-            
-            if (side === 'home') match.homeScore = score;
-            else match.awayScore = score;
-            
-            match.completed = (match.homeScore !== null && match.awayScore !== null);
-            window.saveData();
-            showToast("Skor Berjaya Dikemaskini");
-        };
+        function renderScoreInput(id, side, val, isKnockout = false) {
+            const fn = isKnockout ? 'updateKnockoutScore' : 'updateScore';
+            if (isAdmin) {
+                return `<div class="score-box p-1 rounded-xl"><input type="number" value="${val ?? ''}" onchange="${fn}('${id}', '${side}', this.value)" class="w-10 h-12 bg-transparent text-center font-black text-xl text-black outline-none"></div>`;
+            }
+            return `<span class="text-2xl font-black w-8 text-center ${val !== null ? 'text-black' : 'text-slate-300'}">${val ?? '0'}</span>`;
+        }
 
         window.renderTables = function() {
             ['A', 'B'].forEach(group => {
                 const tableBody = document.getElementById(`table-${group}`);
-                const data = db[currentCategory];
-                if (!data) return;
-
-                const stats = data.teamNames[group].map((name, idx) => ({
-                    idx, name, played: 0, win: 0, draw: 0, loss: 0, points: 0
-                }));
-
-                data.matches.filter(m => m.group === group && m.completed).forEach(m => {
-                    const home = stats.find(s => s.idx === m.homeIdx);
-                    const away = stats.find(s => s.idx === m.awayIdx);
-
-                    if (home && away) {
-                        home.played++; away.played++;
-                        if (m.homeScore > m.awayScore) { home.win++; home.points += 3; away.loss++; }
-                        else if (m.homeScore < m.awayScore) { away.win++; away.points += 3; home.loss++; }
-                        else { home.draw++; home.points += 1; away.draw++; away.points += 1; }
-                    }
-                });
-
-                stats.sort((a, b) => b.points - a.points || (b.win - a.win));
+                const stats = getStandings(group);
 
                 tableBody.innerHTML = stats.map((s, idx) => `
-                    <tr class="border-t border-slate-200 hover:bg-slate-50 transition-colors">
+                    <tr class="border-t border-slate-200 hover:bg-slate-50 transition-colors ${idx < 2 ? 'bg-green-50/50' : ''}">
                         <td class="p-5 flex items-center gap-4">
-                            <span class="text-slate-400 font-black text-xs">${idx + 1}</span> 
-                            <span class="font-black text-sm tracking-tight text-slate-700">${s.name}</span>
+                            <span class="text-slate-400 font-black text-xs w-4">${idx + 1}</span> 
+                            <span class="font-black text-sm tracking-tight text-slate-700">${s.name} ${idx < 2 ? 'Example' : ''} ${idx === 0 ? '🏆' : (idx === 1 ? '🥈' : '')}</span>
                         </td>
                         <td class="p-5 font-black text-slate-500">${s.played}</td>
                         <td class="p-5 font-black text-green-700">${s.win}</td>
@@ -501,6 +524,93 @@
             });
         };
 
+        window.renderKnockout = function() {
+            const data = db[currentCategory];
+            if (!data.knockout) return;
+
+            const standingsA = getStandings('A');
+            const standingsB = getStandings('B');
+
+            // Determine Semi Final Teams
+            const teamSemi1Home = standingsA[0]?.name || "Johan A";
+            const teamSemi1Away = standingsB[1]?.name || "N.Johan B";
+            const teamSemi2Home = standingsB[0]?.name || "Johan B";
+            const teamSemi2Away = standingsA[1]?.name || "N.Johan A";
+
+            // Determine Final Teams based on Semi scores
+            const semi1 = data.knockout.semi1;
+            const semi2 = data.knockout.semi2;
+            
+            let teamFinalHome = "Pemenang SF1";
+            let teamFinalAway = "Pemenang SF2";
+
+            if (semi1.homeScore !== null && semi1.awayScore !== null) {
+                if (semi1.homeScore > semi1.awayScore) teamFinalHome = teamSemi1Home;
+                else if (semi1.awayScore > semi1.homeScore) teamFinalHome = teamSemi1Away;
+            }
+
+            if (semi2.homeScore !== null && semi2.awayScore !== null) {
+                if (semi2.homeScore > semi2.awayScore) teamFinalAway = teamSemi2Home;
+                else if (semi2.awayScore > semi2.homeScore) teamFinalAway = teamSemi2Away;
+            }
+
+            // Render SF1
+            document.getElementById('knockout-semi1').innerHTML = renderKnockoutCard('semi1', teamSemi1Home, teamSemi1Away, semi1);
+            // Render SF2
+            document.getElementById('knockout-semi2').innerHTML = renderKnockoutCard('semi2', teamSemi2Home, teamSemi2Away, semi2);
+            // Render Final
+            document.getElementById('knockout-final').innerHTML = renderKnockoutCard('final', teamFinalHome, teamFinalAway, data.knockout.final, true);
+        };
+
+        function renderKnockoutCard(id, homeName, awayName, matchData, isFinal = false) {
+            return `
+                <div class="flex items-center justify-between gap-4">
+                     <div class="flex-1 text-right font-black text-sm md:text-base tracking-tight ${isFinal ? 'text-xl' : ''} text-slate-800">${homeName}</div>
+                     <div class="flex items-center gap-2 shrink-0">
+                        ${renderScoreInput(id, 'home', matchData.homeScore, true)}
+                        <span class="text-xs font-black text-slate-300">-</span>
+                        ${renderScoreInput(id, 'away', matchData.awayScore, true)}
+                     </div>
+                     <div class="flex-1 text-left font-black text-sm md:text-base tracking-tight ${isFinal ? 'text-xl' : ''} text-slate-800">${awayName}</div>
+                </div>
+            `;
+        }
+
+        // --- UPDATE FUNCTIONS ---
+
+        window.updateTeamName = function(group, idx, newName) {
+            if (!newName.trim()) return;
+            db[currentCategory].teamNames[group][idx] = newName.trim();
+            window.saveData();
+        };
+
+        window.updateScore = function(id, side, value) {
+            const match = db[currentCategory].matches.find(m => m.id === id);
+            const score = value === '' ? null : parseInt(value);
+            if (side === 'home') match.homeScore = score; else match.awayScore = score;
+            match.completed = (match.homeScore !== null && match.awayScore !== null);
+            window.saveData();
+            showToast("Skor Kumpulan Disimpan");
+        };
+
+        window.updateKnockoutScore = function(matchId, side, value) {
+            const score = value === '' ? null : parseInt(value);
+            const ko = db[currentCategory].knockout;
+            
+            if (matchId === 'semi1') {
+                if (side === 'home') ko.semi1.homeScore = score; else ko.semi1.awayScore = score;
+            } else if (matchId === 'semi2') {
+                if (side === 'home') ko.semi2.homeScore = score; else ko.semi2.awayScore = score;
+            } else if (matchId === 'final') {
+                if (side === 'home') ko.final.homeScore = score; else ko.final.awayScore = score;
+            }
+            
+            window.saveData();
+            showToast("Skor Kalah Mati Disimpan");
+        };
+
+        // --- UI UTILS ---
+
         window.switchCategory = function(cat) {
             currentCategory = cat;
             document.getElementById('btn-rendah').className = cat === 'rendah' ? 'cat-active px-8 py-2.5 rounded-xl border border-black font-black transition-all uppercase tracking-widest text-xs' : 'px-8 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-400 font-black transition-all uppercase tracking-widest text-xs hover:border-black hover:text-black';
@@ -509,36 +619,23 @@
         };
 
         window.switchTab = function(tab) {
-            document.getElementById('content-jadual').classList.toggle('hidden', tab !== 'jadual');
-            document.getElementById('content-kedudukan').classList.toggle('hidden', tab !== 'kedudukan');
-            const tabs = ['tab-jadual', 'tab-kedudukan'];
-            tabs.forEach(t => {
-                const el = document.getElementById(t);
-                if (t.includes(tab)) el.className = 'pb-4 px-2 text-sm font-black uppercase tracking-widest transition-all tab-active';
-                else el.className = 'pb-4 px-2 text-sm font-black uppercase tracking-widest text-slate-500 hover:text-black transition-all';
+            ['jadual', 'kedudukan', 'kalahmati'].forEach(t => {
+                document.getElementById(`content-${t}`).classList.toggle('hidden', t !== tab);
+                const el = document.getElementById(`tab-${t}`);
+                if (t === tab) el.className = 'pb-4 px-2 text-sm font-black uppercase tracking-widest transition-all tab-active whitespace-nowrap';
+                else el.className = 'pb-4 px-2 text-sm font-black uppercase tracking-widest text-slate-500 hover:text-black transition-all whitespace-nowrap';
             });
         };
 
         window.toggleAdminMode = function() {
-            if (isAdmin) {
-                isAdmin = false;
-                updateAdminUI(false);
-                renderAll();
-            } else {
-                document.getElementById('adminModal').classList.remove('hidden');
-            }
+            if (isAdmin) { isAdmin = false; updateAdminUI(false); renderAll(); } 
+            else { document.getElementById('adminModal').classList.remove('hidden'); }
         };
 
         window.loginAdmin = function() {
             const pass = document.getElementById('adminPass').value;
-            if (pass === 'admin123') {
-                isAdmin = true;
-                updateAdminUI(true);
-                closeModal();
-                renderAll();
-            } else {
-                alert('Akses Ditolak');
-            }
+            if (pass === 'admin123') { isAdmin = true; updateAdminUI(true); closeModal(); renderAll(); } 
+            else { alert('Akses Ditolak'); }
             document.getElementById('adminPass').value = '';
         };
 
@@ -561,7 +658,6 @@
         };
 
         window.closeModal = function() { document.getElementById('adminModal').classList.add('hidden'); }
-        
         window.showToast = function(text) {
             const toast = document.getElementById('toast');
             document.getElementById('toast-text').innerText = text;
